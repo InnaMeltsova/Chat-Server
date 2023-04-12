@@ -1,0 +1,42 @@
+version: '3.5'
+
+services: #sets up a PostgreSQL database using the official postgres image from Docker Hub
+  app: #builds a Docker image for the NestJS app using the Dockerfile in the current directory
+      build:
+        context: .
+        dockerfile: Dockerfile
+        target: development
+      container_name: chat-app
+      command: npm run start:dev
+      tty: true
+      environment: #sets the environment variable PORT to the value of the host PORT environment variable
+        - PORT=${PORT}
+      ports:
+        - '3000:3000'
+      depends_on: #specifies that this service depends on the db service(db container will be started before the app container)
+        - db
+      volumes: #mounts the src directory on the host to the /app/src directory in the container
+        - ./:/app
+
+  db:
+    image: postgres
+    restart: always #ensures that the container will automatically restart if it crashes or is stopped
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    container_name: postgres
+    volumes: #creates a named volume pgdata for storing the database data
+      - ./pgdata:/var/lib/postgresql/data
+    ports: #maps the container port 5432 to the host port 5432
+      - '5432:5432'
+
+  pgadmin: #sets up pgAdmin, a web-based PostgreSQL administration tool, using the dpage/pgadmin4 image from Docker Hub
+    image: dpage/pgadmin4
+    restart: always
+    container_name: nest-pgadmin4
+    environment: #sets the default email and password for the pgAdmin login
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com 
+      - PGADMIN_DEFAULT_PASSWORD=pgadmin4
+    ports:
+      - '5050:80'
+    depends_on:
+      - db
