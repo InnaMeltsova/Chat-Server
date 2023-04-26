@@ -15,5 +15,5 @@ export class Chat {
     content: string;
 
     @Column()
-    createdAt: Date;
+    createdAt: String;
 }
